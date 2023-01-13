@@ -1,0 +1,818 @@
+{
+    "id": "5fdbdc36-0721-4dd5-a8c6-b89deea98ec4",
+    "white_player": "e4665b8e-f1ed-4487-a9f3-de93b2b186c3",
+    "black_player": "8e1c39de-3b6e-4e7b-ba73-87fc45eff85f",
+    "status": 0,
+    "result": 0,
+    "winner": null,
+    "started": null,
+    "completed": null,
+    "current_turn": 0,
+    "pieces": [
+        {
+            "id": "424630e4-a184-4c35-9e13-b1b600ed58ee",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "a"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "a"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "4c53df28-2163-4247-b532-239c7b666224",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "b"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "b"
+                },
+                {
+                    "rank": 5,
+                    "file": "b"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "19a447fd-58ae-4743-9056-a8022e2a081a",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 6,
+                "file": "c"
+            },
+            "captured": false,
+            "first_move": false,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 5,
+                    "file": "c"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "e7bea95d-6303-4ecf-96ef-d780fa8935ca",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "d"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "d"
+                },
+                {
+                    "rank": 5,
+                    "file": "d"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "db66c279-cfbe-40db-873d-58e730d7093b",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "e"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "e"
+                },
+                {
+                    "rank": 5,
+                    "file": "e"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "bfdeb957-56a1-4ce6-83ab-2287bc246c7f",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "f"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "f"
+                },
+                {
+                    "rank": 5,
+                    "file": "f"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "0f4ad32d-3c63-45d6-996c-c2796b9451f3",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "g"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "g"
+                },
+                {
+                    "rank": 5,
+                    "file": "g"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "265f7218-effc-4dc0-bf3c-196d230d8948",
+            "piece_type": "Pawn",
+            "color": "Black",
+            "location": {
+                "rank": 7,
+                "file": "h"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "h"
+                },
+                {
+                    "rank": 5,
+                    "file": "h"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "8d801424-fee1-4b54-b69f-a7fcafa003a2",
+            "piece_type": "Rook",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "a"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [],
+            "valid_captures": []
+        },
+        {
+            "id": "362a5dfc-a7c4-4963-9f16-54c01a58d410",
+            "piece_type": "Rook",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "h"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [],
+            "valid_captures": []
+        },
+        {
+            "id": "09b7393e-4997-4e05-afc5-c5eb9df1785a",
+            "piece_type": "Knight",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "b"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "a"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "20924f40-dfc2-42fb-9655-c01bfdd41807",
+            "piece_type": "Knight",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "g"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "h"
+                },
+                {
+                    "rank": 6,
+                    "file": "f"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "7ebf79ed-e096-479f-86d7-2ee3506a6013",
+            "piece_type": "Bishop",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "c"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [],
+            "valid_captures": []
+        },
+        {
+            "id": "6528d47c-2452-47e3-b555-4af7f66858b1",
+            "piece_type": "Bishop",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "f"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [],
+            "valid_captures": []
+        },
+        {
+            "id": "03af68ff-2bc6-481c-a29b-585374b4eb3d",
+            "piece_type": "Queen",
+            "color": "Black",
+            "location": {
+                "rank": 5,
+                "file": "a"
+            },
+            "captured": false,
+            "first_move": false,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 6,
+                    "file": "b"
+                },
+                {
+                    "rank": 7,
+                    "file": "c"
+                },
+                {
+                    "rank": 8,
+                    "file": "d"
+                },
+                {
+                    "rank": 4,
+                    "file": "b"
+                },
+                {
+                    "rank": 3,
+                    "file": "c"
+                },
+                {
+                    "rank": 2,
+                    "file": "d"
+                },
+                {
+                    "rank": 5,
+                    "file": "b"
+                },
+                {
+                    "rank": 5,
+                    "file": "c"
+                },
+                {
+                    "rank": 5,
+                    "file": "d"
+                },
+                {
+                    "rank": 5,
+                    "file": "e"
+                },
+                {
+                    "rank": 5,
+                    "file": "f"
+                },
+                {
+                    "rank": 5,
+                    "file": "g"
+                },
+                {
+                    "rank": 5,
+                    "file": "h"
+                },
+                {
+                    "rank": 4,
+                    "file": "a"
+                },
+                {
+                    "rank": 6,
+                    "file": "a"
+                }
+            ],
+            "valid_captures": [
+                {
+                    "rank": 1,
+                    "file": "e"
+                },
+                {
+                    "rank": 3,
+                    "file": "a"
+                }
+            ]
+        },
+        {
+            "id": "88ca7932-e20d-4543-95d0-e2650753b43e",
+            "piece_type": "King",
+            "color": "Black",
+            "location": {
+                "rank": 8,
+                "file": "e"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 8,
+                    "file": "d"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "88d26b46-20c8-4cdb-b742-344e4619bd4d",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 3,
+                "file": "a"
+            },
+            "captured": false,
+            "first_move": false,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 3,
+                    "file": "a"
+                },
+                {
+                    "rank": 4,
+                    "file": "a"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "d5590743-82ac-4536-a70d-b4b40d1d1b2b",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 2,
+                "file": "b"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 3,
+                    "file": "b"
+                },
+                {
+                    "rank": 4,
+                    "file": "b"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "1aad8e50-d3c0-45b7-869d-608266c07ef7",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 2,
+                "file": "c"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 3,
+                    "file": "c"
+                },
+                {
+                    "rank": 4,
+                    "file": "c"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "e3a7a6db-440d-401d-ae8b-5990170a97d9",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 4,
+                "file": "d"
+            },
+            "captured": false,
+            "first_move": false,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 5,
+                    "file": "d"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "cc21946a-d06b-474d-8c04-06df66fece41",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 4,
+                "file": "e"
+            },
+            "captured": false,
+            "first_move": false,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 5,
+                    "file": "e"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "f6431151-9ffa-4ca4-b60a-b85d83b8463d",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 2,
+                "file": "f"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 3,
+                    "file": "f"
+                },
+                {
+                    "rank": 4,
+                    "file": "f"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "8a1b1ced-da0e-4a86-af02-31e5dadcc816",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 2,
+                "file": "g"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 3,
+                    "file": "g"
+                },
+                {
+                    "rank": 4,
+                    "file": "g"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "76194981-f1e7-46ba-b769-930ed9681667",
+            "piece_type": "Pawn",
+            "color": "White",
+            "location": {
+                "rank": 2,
+                "file": "h"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 3,
+                    "file": "h"
+                },
+                {
+                    "rank": 4,
+                    "file": "h"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "e0800e05-670d-4bdc-89d0-4bbfc2aebb3e",
+            "piece_type": "Rook",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "a"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [],
+            "valid_captures": []
+        },
+        {
+            "id": "487910b5-171e-46b3-b90a-97caf2037943",
+            "piece_type": "Rook",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "h"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [],
+            "valid_captures": []
+        },
+        {
+            "id": "c697a475-2577-4a49-bb7b-705c6da40110",
+            "piece_type": "Knight",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "b"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 2,
+                    "file": "d"
+                },
+                {
+                    "rank": 3,
+                    "file": "c"
+                },
+                {
+                    "rank": 3,
+                    "file": "a"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "cefb5e38-7661-4030-ab4a-5c296d7abd37",
+            "piece_type": "Knight",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "g"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 2,
+                    "file": "e"
+                },
+                {
+                    "rank": 3,
+                    "file": "h"
+                },
+                {
+                    "rank": 3,
+                    "file": "f"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "ca2a55eb-61e2-4519-8976-ecde2e9c020e",
+            "piece_type": "Bishop",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "c"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 2,
+                    "file": "d"
+                },
+                {
+                    "rank": 3,
+                    "file": "e"
+                },
+                {
+                    "rank": 4,
+                    "file": "f"
+                },
+                {
+                    "rank": 5,
+                    "file": "g"
+                },
+                {
+                    "rank": 6,
+                    "file": "h"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "d0e1a658-0f1d-4c32-8602-99df35a034ee",
+            "piece_type": "Bishop",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "f"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 2,
+                    "file": "e"
+                },
+                {
+                    "rank": 3,
+                    "file": "d"
+                },
+                {
+                    "rank": 4,
+                    "file": "c"
+                },
+                {
+                    "rank": 5,
+                    "file": "b"
+                },
+                {
+                    "rank": 6,
+                    "file": "a"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "66d2e288-eeb2-4f1a-b7bc-e69cbbb61105",
+            "piece_type": "Queen",
+            "color": "White",
+            "location": {
+                "rank": 3,
+                "file": "f"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 2,
+                    "file": "e"
+                },
+                {
+                    "rank": 3,
+                    "file": "f"
+                },
+                {
+                    "rank": 4,
+                    "file": "g"
+                },
+                {
+                    "rank": 5,
+                    "file": "h"
+                },
+                {
+                    "rank": 2,
+                    "file": "d"
+                },
+                {
+                    "rank": 3,
+                    "file": "d"
+                }
+            ],
+            "valid_captures": []
+        },
+        {
+            "id": "68e6e3b3-e0e2-44d8-a9b7-f174964963c0",
+            "piece_type": "King",
+            "color": "White",
+            "location": {
+                "rank": 1,
+                "file": "e"
+            },
+            "captured": false,
+            "first_move": true,
+            "promoted": false,
+            "original_piece_type": null,
+            "valid_moves": [
+                {
+                    "rank": 2,
+                    "file": "d"
+                },
+                {
+                    "rank": 2,
+                    "file": "e"
+                }
+            ],
+            "valid_captures": []
+        }
+    ],
+    "white_king_in_check": false,
+    "black_king_in_check": false,
+    "white_in_check_mate": false,
+    "black_in_check_mate": false,
+    "white_king_castle": [],
+    "black_king_castle": []
+}

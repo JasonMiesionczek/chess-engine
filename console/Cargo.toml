@@ -1,0 +1,21 @@
+[package]
+name = "console"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chess-engine = { path = "../engine" }
+tui = "0.19.0"
+crossterm = { version = "0.25" }
+log = "0.4.17"
+env_logger = "0.10.0"
+
+[dependencies.uuid]
+version = "1.2.2"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+]
