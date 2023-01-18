@@ -10,6 +10,12 @@ pub struct PeekResult {
     pub state: LocationState,
 }
 
+#[derive(Clone, Debug)]
+pub struct WalkTargetResult {
+    pub peek_result: PeekResult,
+    pub is_being_attacked: bool,
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum LocationState {
     Empty,
@@ -58,10 +64,16 @@ pub struct ChessPiece {
     original_piece_type: Option<PieceType>,
     valid_moves: Vec<PieceLocation>,
     valid_captures: Vec<PieceLocation>,
+    points: u32,
 }
 
 impl ChessPiece {
-    pub fn new(piece_type: PieceType, color: PieceColor, location: PieceLocation) -> ChessPiece {
+    pub fn new(
+        piece_type: PieceType,
+        color: PieceColor,
+        location: PieceLocation,
+        points: u32,
+    ) -> ChessPiece {
         ChessPiece {
             id: Uuid::new_v4(),
             piece_type,
@@ -73,6 +85,7 @@ impl ChessPiece {
             original_piece_type: None,
             valid_moves: Vec::new(),
             valid_captures: Vec::new(),
+            points,
         }
     }
 
@@ -140,6 +153,20 @@ impl ChessPiece {
             location: direction_location.clone(),
             state: self.peek_location(&direction_location.unwrap(), chess_match),
         }
+    }
+
+    pub fn walk_to_target(
+        &self,
+        source_piece: &ChessPiece,
+        current_location: Option<PieceLocation>,
+        target_location: &PieceLocation,
+        results: Vec<WalkTargetResult>,
+    ) -> Vec<WalkTargetResult> {
+        if current_location.is_none() {
+            return results;
+        }
+
+        results
     }
 
     pub fn walk_direction(
@@ -219,6 +246,10 @@ impl ChessPiece {
         self.piece_type
     }
 
+    pub fn got_promoted(&self) -> bool {
+        self.promoted
+    }
+
     pub fn add_valid_move(&mut self, location: &PieceLocation) {
         if !self.valid_moves.contains(location) {
             self.valid_moves.push(location.copy());
@@ -228,6 +259,28 @@ impl ChessPiece {
     pub fn add_valid_capture(&mut self, location: &PieceLocation) {
         if !self.valid_captures.contains(location) {
             self.valid_captures.push(location.copy());
+        }
+    }
+
+    pub fn remove_valid_move(&mut self, location: &PieceLocation) {
+        if self.valid_moves.contains(location) {
+            let pos = self
+                .valid_moves
+                .iter()
+                .position(|m| *m == *location)
+                .unwrap();
+            self.valid_moves.remove(pos);
+        }
+    }
+
+    pub fn remove_valid_captures(&mut self, location: &PieceLocation) {
+        if self.valid_captures.contains(location) {
+            let pos = self
+                .valid_captures
+                .iter()
+                .position(|m| *m == *location)
+                .unwrap();
+            self.valid_captures.remove(pos);
         }
     }
 
@@ -252,6 +305,14 @@ impl ChessPiece {
             PieceType::Bishop => "B".to_string(),
             PieceType::Queen => "Q".to_string(),
             PieceType::King => "K".to_string(),
+        }
+    }
+
+    pub fn get_notation_text(&self) -> String {
+        if self.piece_type == PieceType::Pawn {
+            "".to_string()
+        } else {
+            self.get_text()
         }
     }
 }

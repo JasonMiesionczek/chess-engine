@@ -66,6 +66,14 @@ impl PieceLocation {
         Ok(PieceLocation { rank, file })
     }
 
+    pub fn get_rank(&self) -> u32 {
+        self.rank
+    }
+
+    pub fn get_file(&self) -> String {
+        self.file.clone()
+    }
+
     pub fn get_next_file(&self) -> Option<String> {
         let index = FILES.iter().position(|&r| r == self.file).unwrap();
         if index + 1 < FILES.len() {

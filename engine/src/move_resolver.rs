@@ -4,8 +4,8 @@ use log::debug;
 use uuid::Uuid;
 
 use crate::{
-    chess_match::{ChessMatch, KingCastleData},
-    piece_base::{ChessPiece, LocationState, MoveDirection, PieceColor, PieceType},
+    chess_match::{CastleSide, ChessMatch, KingCastleData},
+    piece_base::{ChessPiece, LocationState, MoveDirection, PeekResult, PieceColor, PieceType},
     piece_location::PieceLocation,
 };
 #[derive(Debug)]
@@ -33,11 +33,56 @@ impl MoveResolver {
                 PieceType::King => {
                     self.calculate_king_moves(&mut p, &chess_match);
                     self.calculate_king_can_castle(&mut p, chess_match);
+
+                    // for valid king moves/captures, have to simulate each one and if the king would end up in check,
+                    // remove those moves/captures
+                    //self.handle_king_cant_move_into_check(&mut p, chess_match);
                 }
             }
         }
 
         chess_match.set_pieces(pieces.clone());
+    }
+
+    pub fn handle_king_cant_move_into_check(&self, chess_match: &mut ChessMatch) {
+        let mut moves_to_remove: Vec<(Uuid, PieceLocation)> = Vec::new();
+        let mut caps_to_remove: Vec<(Uuid, PieceLocation)> = Vec::new();
+
+        {
+            let kings = chess_match.get_pieces_by_type(PieceType::King);
+            for king in kings {
+                let color = king.get_color();
+                //let mut moves_to_remove = Vec::new();
+                //let mut captures_to_remove = Vec::new();
+                for m in &king.get_valid_moves() {
+                    let mut match_clone = chess_match.copy();
+                    self.simulate_move(&mut match_clone, &king, m.clone());
+                    if color == PieceColor::White && match_clone.get_white_king_in_check() {
+                        //moves_to_remove.push(m.clone());
+                        moves_to_remove.push((king.id.clone(), m.clone()));
+                    }
+                }
+
+                for c in &king.get_valid_captures() {
+                    let mut match_clone = chess_match.copy();
+                    self.simulate_capture(&mut match_clone, &king, c.clone());
+                    if color == PieceColor::White && match_clone.get_white_king_in_check() {
+                        //captures_to_remove.push(c.clone());
+                        caps_to_remove.push((king.id.clone(), c.clone()));
+                    }
+                }
+            }
+        }
+
+        for (id, location) in moves_to_remove {
+            let piece = chess_match.get_piece_by_id(&id);
+            piece.remove_valid_move(&location);
+        }
+
+        for (id, location) in caps_to_remove {
+            let piece = chess_match.get_piece_by_id(&id);
+            piece.remove_valid_captures(&location);
+        }
     }
 
     fn calculate_checkmate(&self, chess_match: &mut ChessMatch) {
@@ -170,6 +215,7 @@ impl MoveResolver {
         let resolver = MoveResolver {};
         resolver.calculate_valid_moves(chess_match);
         resolver.calculate_king_in_check(chess_match);
+        //resolver.handle_king_cant_move_into_check(chess_match);
     }
 
     fn simulate_capture(
@@ -296,19 +342,11 @@ impl MoveResolver {
                         // we found the rook, so add the previous two results as valid moves for the king
                         let p_loc = peek_result.location.clone().unwrap();
                         let p2_loc = peek_result2.location.clone().unwrap();
-                        piece.add_valid_move(&p_loc);
-                        piece.add_valid_move(&p2_loc);
 
-                        let kcd = KingCastleData {
-                            king_id: piece.id.clone(),
-                            king_target_location: p2_loc,
-                            rook_id: rook.id.clone(),
-                            rook_target_location: peek_result.location.unwrap(),
-                        };
-
-                        match color {
-                            PieceColor::White => chess_match.white_king_castle.push(kcd),
-                            PieceColor::Black => chess_match.black_king_castle.push(kcd),
+                        // king can only castle if he does not pass through or land in check
+                        if !chess_match.locations_are_being_attacked(vec![&p_loc, &p2_loc], &color)
+                        {
+                            self.add_valid_castle(piece, p_loc, p2_loc, rook, color, chess_match);
                         }
                     } else if peek_result3.state == LocationState::Empty {
                         // if we find another empty space, check once more for the rook
@@ -321,26 +359,52 @@ impl MoveResolver {
                         if *peek_result4.location.as_ref().unwrap() == rook.location {
                             let p_loc = peek_result.location.clone().unwrap();
                             let p2_loc = peek_result2.location.clone().unwrap();
-                            let p3_loc = peek_result3.location.clone().unwrap();
-                            piece.add_valid_move(&p_loc);
-                            piece.add_valid_move(&p2_loc);
-                            piece.add_valid_move(&p3_loc);
-
-                            let kcd = KingCastleData {
-                                king_id: piece.id.clone(),
-                                king_target_location: p3_loc,
-                                rook_id: rook.id.clone(),
-                                rook_target_location: p2_loc,
-                            };
-
-                            match color {
-                                PieceColor::White => chess_match.white_king_castle.push(kcd),
-                                PieceColor::Black => chess_match.black_king_castle.push(kcd),
+                            // king can only castle if he does not pass through or land in check
+                            if !chess_match
+                                .locations_are_being_attacked(vec![&p_loc, &p2_loc], &color)
+                            {
+                                self.add_valid_castle(
+                                    piece,
+                                    p_loc,
+                                    p2_loc,
+                                    rook,
+                                    color,
+                                    chess_match,
+                                );
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    fn add_valid_castle(
+        &self,
+        piece: &mut ChessPiece,
+        p_loc: PieceLocation,
+        p2_loc: PieceLocation,
+        rook: &ChessPiece,
+        color: PieceColor,
+        chess_match: &mut ChessMatch,
+    ) {
+        piece.add_valid_move(&p_loc);
+        piece.add_valid_move(&p2_loc);
+        let rook_location = rook.location.get_x_y();
+        let kcd = KingCastleData {
+            king_id: piece.id.clone(),
+            king_target_location: p2_loc,
+            rook_id: rook.id.clone(),
+            rook_target_location: p_loc,
+            side: if rook_location.0 == 0f64 {
+                CastleSide::QueenSide
+            } else {
+                CastleSide::KingSide
+            },
+        };
+        match color {
+            PieceColor::White => chess_match.white_king_castle.push(kcd),
+            PieceColor::Black => chess_match.black_king_castle.push(kcd),
         }
     }
 

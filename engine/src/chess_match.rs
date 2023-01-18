@@ -8,9 +8,16 @@ use uuid::Uuid;
 
 use crate::{
     move_resolver::MoveResolver,
+    movement_log::{MovementLogEntry, MovementLogger},
     piece_base::{ChessPiece, PieceColor, PieceType},
     piece_location::{PieceLocation, FILES},
 };
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CastleSide {
+    KingSide,
+    QueenSide,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KingCastleData {
@@ -18,6 +25,7 @@ pub struct KingCastleData {
     pub king_target_location: PieceLocation,
     pub rook_id: Uuid,
     pub rook_target_location: PieceLocation,
+    pub side: CastleSide,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -38,6 +46,7 @@ pub struct ChessMatch {
     black_in_check_mate: bool,
     pub white_king_castle: Vec<KingCastleData>,
     pub black_king_castle: Vec<KingCastleData>,
+    movement_log: Vec<MovementLogEntry>,
 }
 
 impl ChessMatch {
@@ -61,6 +70,29 @@ impl ChessMatch {
             black_in_check_mate: false,
             white_king_castle: Vec::new(),
             black_king_castle: Vec::new(),
+            movement_log: Vec::new(),
+        }
+    }
+
+    pub fn copy(&self) -> ChessMatch {
+        ChessMatch {
+            id: self.id.clone(),
+            white_player: self.white_player.clone(),
+            black_player: self.black_player.clone(),
+            status: self.status,
+            result: self.result,
+            winner: self.winner,
+            started: self.started,
+            completed: self.completed,
+            current_turn: self.current_turn.clone(),
+            pieces: self.pieces.clone(),
+            white_king_in_check: self.white_king_in_check,
+            black_king_in_check: self.black_king_in_check,
+            white_in_check_mate: self.white_in_check_mate,
+            black_in_check_mate: self.black_in_check_mate,
+            white_king_castle: self.white_king_castle.clone(),
+            black_king_castle: self.black_king_castle.clone(),
+            movement_log: self.movement_log.clone(),
         }
     }
 
@@ -70,6 +102,14 @@ impl ChessMatch {
 
     pub fn get_match_id(&self) -> Uuid {
         self.id
+    }
+
+    pub fn get_white_player_id(&self) -> Uuid {
+        self.white_player
+    }
+
+    pub fn get_black_player_id(&self) -> Uuid {
+        self.black_player
     }
 
     pub fn get_json_string(&self) -> String {
@@ -201,10 +241,37 @@ impl ChessMatch {
         }
     }
 
+    pub fn location_is_being_attacked(
+        &self,
+        location: &PieceLocation,
+        defending_player: &PieceColor,
+    ) -> bool {
+        let pieces = self.get_player_pieces_in_play(if *defending_player == PieceColor::White {
+            &PieceColor::Black
+        } else {
+            defending_player
+        });
+
+        pieces
+            .iter()
+            .any(|p| p.get_valid_captures().contains(&location.clone()))
+    }
+
+    pub fn locations_are_being_attacked(
+        &self,
+        locations: Vec<&PieceLocation>,
+        defending_player: &PieceColor,
+    ) -> bool {
+        locations
+            .iter()
+            .any(|loc| self.location_is_being_attacked(loc, defending_player))
+    }
+
     pub fn calculate_valid_moves(&mut self) {
         let resolver = MoveResolver {};
 
         resolver.calculate_valid_moves(self);
+        resolver.handle_king_cant_move_into_check(self);
         resolver.calculate_king_in_check(self);
         resolver.handle_king_in_check(self);
     }
@@ -219,7 +286,20 @@ impl ChessMatch {
         piece.to_owned()
     }
 
-    pub fn handle_king_castle(&mut self, piece_id: &Uuid, target_location: &PieceLocation) {
+    pub fn get_pieces_by_type(&self, piece_type: PieceType) -> Vec<ChessPiece> {
+        self.pieces
+            .clone()
+            .into_iter()
+            .filter(|p| p.get_type() == piece_type)
+            .collect()
+    }
+
+    pub fn handle_king_castle(
+        &mut self,
+        piece_id: &Uuid,
+        target_location: &PieceLocation,
+        movement_entry: &mut MovementLogEntry,
+    ) {
         let piece = self.get_piece_by_id(piece_id);
         let color = piece.get_color();
 
@@ -233,6 +313,10 @@ impl ChessMatch {
                             // we just also move the rook to its target location
                             let rook = self.get_piece_by_id(&wkc.rook_id);
                             rook.set_moved(wkc.rook_target_location);
+                            match wkc.side {
+                                CastleSide::KingSide => movement_entry.castled_king_side(),
+                                CastleSide::QueenSide => movement_entry.castled_queen_side(),
+                            };
                         }
                     }
                 }
@@ -243,6 +327,10 @@ impl ChessMatch {
                         if bkc.king_target_location == *target_location {
                             let rook = self.get_piece_by_id(&bkc.rook_id);
                             rook.set_moved(bkc.rook_target_location);
+                            match bkc.side {
+                                CastleSide::KingSide => movement_entry.castled_king_side(),
+                                CastleSide::QueenSide => movement_entry.castled_queen_side(),
+                            };
                         }
                     }
                 }
@@ -255,11 +343,22 @@ impl ChessMatch {
         let piece = self.get_piece_by_id_copy(piece_id);
         debug!("valid moves: {:?}", piece.get_valid_moves());
 
+        let player_id = if piece.get_color() == PieceColor::White {
+            self.get_white_player_id()
+        } else {
+            self.get_black_player_id()
+        };
+        let mut movement_entry = MovementLogEntry::new(
+            player_id,
+            piece_id.clone(),
+            piece.location.clone(),
+            location.clone(),
+        );
         let can_move = piece.get_valid_moves().contains(location);
         let can_capture = piece.get_valid_captures().contains(location);
         let is_king = piece.get_type() == PieceType::King;
         if can_capture {
-            self.handle_capture(location.clone());
+            self.handle_capture(location.clone(), &mut movement_entry);
         }
 
         if can_move || can_capture {
@@ -267,16 +366,26 @@ impl ChessMatch {
         }
 
         if is_king {
-            self.handle_king_castle(piece_id, &location.clone());
+            self.handle_king_castle(piece_id, &location.clone(), &mut movement_entry);
         }
 
         self.change_turn();
         self.calculate_valid_moves();
+
+        if (piece.get_color() == PieceColor::Black && self.get_white_king_in_check())
+            || (piece.get_color() == PieceColor::White && self.get_black_king_in_check())
+        {
+            movement_entry.opponent_king_in_check();
+        }
+
+        let final_entry = MovementLogger::add_entry_to_match(self, movement_entry);
+        info!("Entry logged: {}", final_entry);
     }
 
-    fn handle_capture(&mut self, location: PieceLocation) {
+    fn handle_capture(&mut self, location: PieceLocation, movement_entry: &mut MovementLogEntry) {
         let piece = self.get_piece_at_location_mut(location).unwrap();
         piece.set_captured();
+        movement_entry.captured(piece.id.clone());
     }
 
     fn handle_move(&mut self, piece_id: &Uuid, location: PieceLocation) {
@@ -296,6 +405,14 @@ impl ChessMatch {
         self.current_turn.get()
     }
 
+    pub fn add_log_entry(&mut self, entry: MovementLogEntry) {
+        self.movement_log.push(entry);
+    }
+
+    pub fn get_log_entries(&self) -> Vec<MovementLogEntry> {
+        self.movement_log.clone()
+    }
+
     fn generate_pieces() -> Vec<ChessPiece> {
         let mut result = Vec::new();
         let pawn_ranks: HashMap<PieceColor, u32> =
@@ -313,7 +430,7 @@ impl ChessMatch {
             for f in FILES {
                 let location =
                     PieceLocation::new_from_string(format!("{}{}", f, rank).as_str()).unwrap();
-                let piece = ChessPiece::new(PieceType::Pawn, color.clone(), location);
+                let piece = ChessPiece::new(PieceType::Pawn, color.clone(), location, 1);
                 result.push(piece);
             }
 
@@ -322,7 +439,7 @@ impl ChessMatch {
             let rook_positions = vec![0, 7];
             for p in rook_positions {
                 let location = get_location(p, *rank);
-                let rook = ChessPiece::new(PieceType::Rook, color.clone(), location);
+                let rook = ChessPiece::new(PieceType::Rook, color.clone(), location, 5);
                 result.push(rook);
             }
 
@@ -330,7 +447,7 @@ impl ChessMatch {
             let knight_positions = vec![1, 6];
             for p in knight_positions {
                 let location = get_location(p, *rank);
-                let knight = ChessPiece::new(PieceType::Knight, color.clone(), location);
+                let knight = ChessPiece::new(PieceType::Knight, color.clone(), location, 3);
                 result.push(knight);
             }
 
@@ -338,19 +455,19 @@ impl ChessMatch {
             let bishop_positions = vec![2, 5];
             for p in bishop_positions {
                 let location = get_location(p, *rank);
-                let bishop = ChessPiece::new(PieceType::Bishop, color.clone(), location);
+                let bishop = ChessPiece::new(PieceType::Bishop, color.clone(), location, 3);
                 result.push(bishop);
             }
 
             // generate queen
             let queen_position = 3;
             let queen_location = get_location(queen_position, *rank);
-            let queen = ChessPiece::new(PieceType::Queen, color.clone(), queen_location);
+            let queen = ChessPiece::new(PieceType::Queen, color.clone(), queen_location, 9);
 
             // generate king
             let king_position = 4;
             let king_location = get_location(king_position, *rank);
-            let king = ChessPiece::new(PieceType::King, color.clone(), king_location);
+            let king = ChessPiece::new(PieceType::King, color.clone(), king_location, 0);
 
             result.push(queen);
             result.push(king);

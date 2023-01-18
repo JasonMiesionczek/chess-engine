@@ -1,9 +1,10 @@
 use chess_engine::{
     chess_match::ChessMatch,
+    movement_log::MovementLogger,
     piece_base::{MoveDirection, PieceColor, PieceType},
     piece_location::PieceLocation,
 };
-use log::debug;
+use log::{debug, info};
 use uuid::Uuid;
 
 use crossterm::{
@@ -30,7 +31,7 @@ use tui::{
 };
 
 struct App {
-    chess_match: ChessMatch,
+    pub chess_match: ChessMatch,
     current_tile: (i32, i32),
     selected_tile: Option<(i32, i32)>,
     show_saved_popup: bool,
@@ -86,6 +87,11 @@ impl App {
         } else if self.chess_match.get_black_king_checkmate() {
             self.game_over_text = Some("Game Over! White Wins!".to_string());
         }
+    }
+
+    fn print_match_log(&self) {
+        let formatted_log = MovementLogger::get_formatted_entries(&self.chess_match);
+        info!("{}", formatted_log);
     }
 
     fn set_selected_tile(&mut self) {
@@ -175,6 +181,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Err(err) = res {
             println!("{:?}", err)
         }
+        println!(
+            "Log: {}",
+            MovementLogger::get_formatted_entries(&app.chess_match)
+        );
     }
 
     Ok(())
@@ -204,6 +214,9 @@ fn run_app<B: Backend>(
                         app.show_saved_popup = true;
                         std::fs::write(filename, json_data)
                             .expect("Error writing match data to disk");
+                    }
+                    KeyCode::Char('l') => {
+                        app.print_match_log();
                     }
                     KeyCode::Esc => {
                         app.show_saved_popup = false;
