@@ -31,7 +31,8 @@
                     "file": "a"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "4c8d4d8e-e8e7-406d-a6f0-80d98c8b3a54",
@@ -55,7 +56,8 @@
                     "file": "b"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "8ada70c0-c3a6-46f1-b206-e79c5be18a96",
@@ -79,7 +81,8 @@
                     "file": "c"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "7f860c96-20ae-4dd6-a58e-64e427063178",
@@ -103,7 +106,8 @@
                     "file": "d"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "43ebe9aa-d58f-441d-9102-d7cd71b8b381",
@@ -127,7 +131,8 @@
                     "file": "e"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "a6755df6-48be-4e3b-ab79-50463e00f16d",
@@ -142,7 +147,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "1792980e-267a-49c2-80cd-4077e02b3722",
@@ -157,7 +163,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "bc3abe16-04ba-41a1-9a94-364bb9c5f224",
@@ -172,7 +179,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "9629dcb6-f7a5-4a85-a08f-890470b44750",
@@ -187,7 +195,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "92d7eccb-71d6-41e6-9c3d-1b8f1059a443",
@@ -211,7 +220,8 @@
                     "file": "f"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "c6c71f29-f330-4df6-b3ba-91dc00beaf08",
@@ -235,7 +245,8 @@
                     "file": "a"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "857eea77-52b7-4424-b779-8acdc42f1761",
@@ -272,7 +283,8 @@
                     "rank": 5,
                     "file": "e"
                 }
-            ]
+            ],
+            "points":0
         },
         {
             "id": "26392adf-0505-4dfa-b971-9328a894de9d",
@@ -287,7 +299,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "7c6b9582-69ce-40b3-a1a4-9b57c5fb3708",
@@ -311,7 +324,8 @@
                     "file": "f"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "55323c38-941a-4259-8386-067914e382e2",
@@ -326,7 +340,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "e8d4f4c2-224d-41c5-9701-2c24a4f152f3",
@@ -346,7 +361,8 @@
                     "file": "f"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "0c14dad9-bcd3-4a03-9435-ec8ffd2dcd65",
@@ -370,7 +386,8 @@
                     "file": "a"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "8f009952-ba9e-4d71-9181-4d6d51420556",
@@ -394,7 +411,8 @@
                     "file": "b"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "8a8f0763-362f-4c60-8895-7a24a90ed394",
@@ -418,7 +436,8 @@
                     "file": "c"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "bf389c14-a35b-4233-945c-6aa5c4b9d4e6",
@@ -442,7 +461,8 @@
                     "file": "d"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "9b1f7c38-1676-41b8-94b4-849c44d45b8a",
@@ -466,7 +486,8 @@
                     "file": "e"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "2f3fa352-d935-4570-a0b3-0aea5e532838",
@@ -481,7 +502,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "89d28995-0798-4eef-aeaa-0a417b6162e4",
@@ -496,7 +518,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "5ccdf1d7-3cb5-417d-8073-29577ef1b001",
@@ -520,7 +543,8 @@
                     "file": "h"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "d68bcaa1-2566-4c17-8fb2-9a5f6e393564",
@@ -535,7 +559,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "f327a693-1531-4e3f-bfbd-738de5e24741",
@@ -555,7 +580,8 @@
                     "file": "g"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "9da3fe98-f7a5-467f-aad6-93cb04daed67",
@@ -579,7 +605,8 @@
                     "file": "a"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "070be11c-32ed-49ad-bc24-9b5d43a0b9cb",
@@ -616,7 +643,8 @@
                     "rank": 4,
                     "file": "g"
                 }
-            ]
+            ],
+            "points":0
         },
         {
             "id": "9e85fe29-1e69-47a4-b8f7-f935efa8ee29",
@@ -631,7 +659,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points": 0
         },
         {
             "id": "2c1660de-40d6-49ab-8aa8-2a98827ccdde",
@@ -655,7 +684,8 @@
                     "file": "h"
                 }
             ],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "0c144686-86dc-4dff-a06f-2c8a250a9992",
@@ -670,7 +700,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         },
         {
             "id": "f641c994-a3ea-464a-9c11-ea67b579cdca",
@@ -685,7 +716,8 @@
             "promoted": false,
             "original_piece_type": null,
             "valid_moves": [],
-            "valid_captures": []
+            "valid_captures": [],
+            "points":0
         }
     ],
     "white_king_in_check": false,
@@ -693,5 +725,6 @@
     "white_in_check_mate": false,
     "black_in_check_mate": false,
     "white_king_castle": [],
-    "black_king_castle": []
+    "black_king_castle": [],
+    "movement_log": []
 }

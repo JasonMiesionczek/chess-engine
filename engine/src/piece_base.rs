@@ -98,6 +98,10 @@ impl ChessPiece {
         self.captured = true;
     }
 
+    pub fn has_any_valid_moves_or_captures(&self) -> bool {
+        !self.valid_moves.is_empty() || !self.valid_captures.is_empty()
+    }
+
     pub fn peek_location(
         &self,
         location: &PieceLocation,

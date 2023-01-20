@@ -4,15 +4,25 @@ use log::debug;
 use uuid::Uuid;
 
 use crate::{
-    chess_match::{CastleSide, ChessMatch, KingCastleData},
+    chess_match::{CastleSide, ChessMatch, KingCastleData, KingState},
+    match_helpers::MatchHelpers,
     piece_base::{ChessPiece, LocationState, MoveDirection, PeekResult, PieceColor, PieceType},
     piece_location::PieceLocation,
 };
-#[derive(Debug)]
-struct PieceValidMove {
-    id: Uuid,
+
+pub enum SimulateType {
+    Move,
+    Capture,
+}
+pub struct PieceValidMove {
+    piece_id: Uuid,
     location: PieceLocation,
-    piece_type: PieceType,
+}
+
+pub struct CheckMateResult {
+    pub king_state: KingState,
+    pub new_valid_moves: Vec<PieceValidMove>,
+    pub new_valid_captures: Vec<PieceValidMove>,
 }
 
 pub struct MoveResolver {}
@@ -31,210 +41,154 @@ impl MoveResolver {
                 PieceType::Bishop => self.calculate_bishop_moves(&mut p, &chess_match),
                 PieceType::Queen => self.calculate_queen_moves(&mut p, &chess_match),
                 PieceType::King => {
-                    self.calculate_king_moves(&mut p, &chess_match);
-                    self.calculate_king_can_castle(&mut p, chess_match);
-
-                    // for valid king moves/captures, have to simulate each one and if the king would end up in check,
-                    // remove those moves/captures
-                    //self.handle_king_cant_move_into_check(&mut p, chess_match);
+                    // skip kings here, they need to be calculated last due to checking if their
+                    // valid moves/captures would put them into check
                 }
             }
         }
+
+        let mut kings = chess_match.get_kings();
+        kings.iter_mut().for_each(|k| {
+            self.calculate_king_moves(k, chess_match);
+            self.calculate_king_can_castle(k, chess_match);
+        });
 
         chess_match.set_pieces(pieces.clone());
     }
 
-    pub fn handle_king_cant_move_into_check(&self, chess_match: &mut ChessMatch) {
-        let mut moves_to_remove: Vec<(Uuid, PieceLocation)> = Vec::new();
-        let mut caps_to_remove: Vec<(Uuid, PieceLocation)> = Vec::new();
+    pub fn override_valid_moves(
+        &self,
+        chess_match: &mut ChessMatch,
+        new_valid_moves: Vec<PieceValidMove>,
+        new_valid_captures: Vec<PieceValidMove>,
+    ) {
+        let mut pieces = chess_match.get_pieces_in_play_mut();
+        pieces.iter_mut().for_each(|p| p.clear_all_moves());
 
-        {
-            let kings = chess_match.get_pieces_by_type(PieceType::King);
-            for king in kings {
-                let color = king.get_color();
-                //let mut moves_to_remove = Vec::new();
-                //let mut captures_to_remove = Vec::new();
-                for m in &king.get_valid_moves() {
-                    let mut match_clone = chess_match.copy();
-                    self.simulate_move(&mut match_clone, &king, m.clone());
-                    if color == PieceColor::White && match_clone.get_white_king_in_check() {
-                        //moves_to_remove.push(m.clone());
-                        moves_to_remove.push((king.id.clone(), m.clone()));
-                    }
-                }
-
-                for c in &king.get_valid_captures() {
-                    let mut match_clone = chess_match.copy();
-                    self.simulate_capture(&mut match_clone, &king, c.clone());
-                    if color == PieceColor::White && match_clone.get_white_king_in_check() {
-                        //captures_to_remove.push(c.clone());
-                        caps_to_remove.push((king.id.clone(), c.clone()));
-                    }
-                }
-            }
+        for m in new_valid_moves {
+            let piece = chess_match.get_piece_by_id(&m.piece_id);
+            piece.add_valid_move(&m.location.clone());
         }
 
-        for (id, location) in moves_to_remove {
-            let piece = chess_match.get_piece_by_id(&id);
-            piece.remove_valid_move(&location);
-        }
-
-        for (id, location) in caps_to_remove {
-            let piece = chess_match.get_piece_by_id(&id);
-            piece.remove_valid_captures(&location);
+        for c in new_valid_captures {
+            let piece = chess_match.get_piece_by_id(&c.piece_id);
+            piece.add_valid_capture(&c.location.clone());
         }
     }
 
-    fn calculate_checkmate(&self, chess_match: &mut ChessMatch) {
-        if chess_match.get_white_king_in_check() {
-            let white_pieces = chess_match.get_player_pieces_in_play(&PieceColor::White);
-            let mut white_is_checkmate = true;
-            for p in white_pieces {
-                if !p.get_valid_moves().is_empty() || !p.get_valid_captures().is_empty() {
-                    white_is_checkmate = false;
-                }
-            }
+    pub fn is_king_in_check(&self, king: &ChessPiece, chess_match: &ChessMatch) -> KingState {
+        let location = king.location.clone();
+        let attacking_color = if king.get_color() == PieceColor::White {
+            PieceColor::Black
+        } else {
+            PieceColor::White
+        };
 
-            chess_match.set_white_king_checkmate(white_is_checkmate);
-        } else if chess_match.get_black_king_in_check() {
-            let black_pieces = chess_match.get_player_pieces_in_play(&PieceColor::Black);
-            let mut black_is_checkmate = true;
-            for p in black_pieces {
-                if !p.get_valid_moves().is_empty() || !p.get_valid_captures().is_empty() {
-                    black_is_checkmate = false;
-                }
-            }
+        // detect if king is in check
+        let attacking_pieces =
+            MatchHelpers::get_pieces_with_valid_captures(chess_match, &location, &attacking_color);
 
-            chess_match.set_black_king_checkmate(black_is_checkmate);
+        if attacking_pieces.len() > 0 {
+            return KingState::InCheck;
         }
+
+        KingState::NotInCheck
     }
 
-    pub fn handle_king_in_check(&self, chess_match: &mut ChessMatch) {
-        // when a king is in check, the only valid moves are ones that result
-        // in the king not being in check anymore.
-        // this includes moving the king, moving another piece to block the king
-        // capturing the opposing piece that is threatening the king
-        let white_king_in_check = chess_match.get_white_king_in_check();
-        let black_king_in_check = chess_match.get_black_king_in_check();
-
-        if !black_king_in_check && !white_king_in_check {
-            return;
-        }
-
+    pub fn is_king_in_check_or_stale_mate(
+        &self,
+        king: &ChessPiece,
+        chess_match: &ChessMatch,
+    ) -> CheckMateResult {
         let mut new_valid_moves: Vec<PieceValidMove> = Vec::new();
         let mut new_valid_captures: Vec<PieceValidMove> = Vec::new();
+        let king_state = self.is_king_in_check(king, chess_match);
 
-        for p in &chess_match.pieces {
-            for m in p.get_valid_moves() {
-                let mut match_clone = chess_match.clone();
-                debug!(
-                    "Simulating move for piece: {:?} {:?} at {:?} and move to {:?}",
-                    p.get_color(),
-                    p.get_type(),
-                    p.location,
-                    m
-                );
-                self.simulate_move(&mut match_clone, &p, m.clone());
-                if (white_king_in_check && !match_clone.get_white_king_in_check())
-                    || (black_king_in_check && !match_clone.get_black_king_in_check())
-                {
-                    debug!("New valid move found");
+        // iterate through all pieceses moves and captures, checking if each one results in the
+        // king still being in check
+        let pieces = chess_match.get_pieces_in_play();
+        for p in pieces {
+            p.get_valid_moves().iter().for_each(|m| {
+                let mut sim_result =
+                    self.simulate_move_or_capture(SimulateType::Move, chess_match, &p, m.clone());
+                self.calculate_valid_moves(&mut sim_result);
+                let sim_king = sim_result.get_piece_by_id_copy(&king.id);
+                let sim_king_state = self.is_king_in_check(&sim_king, &sim_result);
+                if sim_king_state == KingState::NotInCheck {
                     new_valid_moves.push(PieceValidMove {
-                        id: p.id.clone(),
+                        piece_id: p.id.clone(),
                         location: m.clone(),
-                        piece_type: p.get_type(),
-                    })
+                    });
                 }
-            }
+            });
 
-            for c in p.get_valid_captures() {
-                let mut match_clone = chess_match.clone();
-                self.simulate_capture(&mut match_clone, &p, c.clone());
-                if (white_king_in_check && !match_clone.get_white_king_in_check())
-                    || (black_king_in_check && !match_clone.get_black_king_in_check())
-                {
+            p.get_valid_captures().iter().for_each(|c| {
+                let mut sim_result = self.simulate_move_or_capture(
+                    SimulateType::Capture,
+                    chess_match,
+                    &p,
+                    c.clone(),
+                );
+                self.calculate_valid_moves(&mut sim_result);
+                let sim_kings = sim_result.get_kings();
+                let sim_king = sim_kings.iter().find(|k| k.get_color() == king.get_color());
+                if sim_king.is_none() {
+                    return;
+                }
+                let sim_king = sim_king.unwrap();
+                //let sim_king = sim_result.get_piece_by_id_copy(&king.id);
+                let sim_king_state = self.is_king_in_check(&sim_king, &sim_result);
+                if sim_king_state == KingState::NotInCheck {
                     new_valid_captures.push(PieceValidMove {
-                        id: p.id.clone(),
+                        piece_id: p.id.clone(),
                         location: c.clone(),
-                        piece_type: p.get_type(),
-                    })
+                    });
                 }
-            }
+            })
         }
 
-        if white_king_in_check {
-            // clear all valid moves and captures for white pieces
-            debug!("clear moves for white pieces, king in check");
-            for p in &mut chess_match.pieces {
-                if p.get_color() == PieceColor::Black {
-                    continue;
-                }
-                p.clear_all_moves();
-            }
-        } else if black_king_in_check {
-            debug!("clear moves for black pieces, king in check");
-            for p in &mut chess_match.pieces {
-                if p.get_color() == PieceColor::White {
-                    continue;
-                }
-                p.clear_all_moves();
-            }
-        }
-
-        if !new_valid_moves.is_empty() {
-            debug!("found new valid moves {:?}", new_valid_moves);
-            for valid_move in new_valid_moves {
-                let piece_to_update = chess_match.get_piece_by_id(&valid_move.id);
-                piece_to_update.add_valid_move(&valid_move.location.clone());
+        let new_king_state = if new_valid_moves.len() == 0 && new_valid_captures.len() == 0 {
+            if king_state == KingState::InCheck {
+                KingState::InCheckMate
+            } else {
+                KingState::InStaleMate
             }
         } else {
-            debug!("no valid moves found");
-        }
+            king_state
+        };
 
-        if !new_valid_captures.is_empty() {
-            debug!("found new valid captures {:?}", new_valid_captures);
-            for valid_capture in new_valid_captures {
-                let piece_to_update = chess_match.get_piece_by_id(&valid_capture.id);
-                piece_to_update.add_valid_capture(&valid_capture.location.clone());
-            }
-        } else {
-            debug!("no valid captures found");
+        CheckMateResult {
+            king_state: new_king_state,
+            new_valid_moves,
+            new_valid_captures,
         }
-
-        self.calculate_checkmate(chess_match);
     }
 
-    fn simulate_move(
+    pub fn simulate_move_or_capture(
         &self,
-        chess_match: &mut ChessMatch,
+        sim_type: SimulateType,
+        chess_match: &ChessMatch,
         piece: &ChessPiece,
         location: PieceLocation,
-    ) {
-        let piece = chess_match.get_piece_by_id(&piece.id);
-        piece.set_moved(location);
-        let resolver = MoveResolver {};
-        resolver.calculate_valid_moves(chess_match);
-        resolver.calculate_king_in_check(chess_match);
-        //resolver.handle_king_cant_move_into_check(chess_match);
-    }
+    ) -> ChessMatch {
+        let mut match_copy = chess_match.copy();
 
-    fn simulate_capture(
-        &self,
-        chess_match: &mut ChessMatch,
-        piece: &ChessPiece,
-        target_location: PieceLocation,
-    ) {
-        let source_piece = chess_match.get_piece_by_id(&piece.id);
-        source_piece.set_moved(target_location.clone());
-        let target_piece = chess_match
-            .get_piece_at_location_mut(target_location.clone())
-            .unwrap();
+        match sim_type {
+            SimulateType::Move => {
+                let piece_copy = match_copy.get_piece_by_id(&piece.id);
+                piece_copy.location = location.clone()
+            }
+            SimulateType::Capture => {
+                let piece_to_capture = match_copy
+                    .get_piece_at_location_mut(location.clone())
+                    .unwrap();
+                piece_to_capture.set_captured();
+                let piece_copy = match_copy.get_piece_by_id(&piece.id);
+                piece_copy.location = location.clone();
+            }
+        }
 
-        target_piece.set_captured();
-
-        let resolver = MoveResolver {};
-        resolver.calculate_valid_moves(chess_match);
-        resolver.calculate_king_in_check(chess_match);
+        match_copy
     }
 
     fn calculate_king_moves(&self, piece: &mut ChessPiece, chess_match: &ChessMatch) {
@@ -252,48 +206,24 @@ impl MoveResolver {
         for d in directions {
             let peek = piece.peek_direction(chess_match, &d, None);
             if peek.state == LocationState::Empty {
-                piece.add_valid_move(&peek.location.unwrap());
-                continue;
+                let location = peek.location.clone().unwrap();
+                let can_be_attacked =
+                    MatchHelpers::locations_can_be_attacked(vec![location.clone()], chess_match);
+                if can_be_attacked.len() == 0 {
+                    piece.add_valid_move(&location);
+                    continue;
+                }
             }
 
             if peek.state == LocationState::Capture {
-                piece.add_valid_capture(&peek.location.unwrap());
+                let location = peek.location.clone().unwrap();
+                let can_be_attacked =
+                    MatchHelpers::locations_can_be_attacked(vec![location.clone()], chess_match);
+                if can_be_attacked.len() == 0 {
+                    piece.add_valid_capture(&location);
+                }
             }
         }
-    }
-
-    pub fn calculate_king_in_check(&self, chess_match: &mut ChessMatch) {
-        let mut white_king_in_check = false;
-        let mut black_king_in_check = false;
-
-        let white_king_location = chess_match
-            .get_piece_by_type_and_color_mut(&PieceType::King, &PieceColor::White)
-            .location
-            .clone();
-        let black_king_location = chess_match
-            .get_piece_by_type_and_color_mut(&PieceType::King, &PieceColor::Black)
-            .location
-            .clone();
-
-        for p in chess_match.pieces.iter() {
-            if p.is_captured() {
-                continue;
-            }
-
-            if p.get_valid_captures().contains(&white_king_location) {
-                white_king_in_check = true;
-            }
-
-            if p.get_valid_captures().contains(&black_king_location) {
-                black_king_in_check = true;
-            }
-        }
-        debug!(
-            "king check results: white: {:?} black: {:?}",
-            white_king_in_check, black_king_in_check
-        );
-        chess_match.set_white_king_in_check(white_king_in_check);
-        chess_match.set_black_king_in_check(black_king_in_check);
     }
 
     fn calculate_king_can_castle(&self, piece: &mut ChessPiece, chess_match: &mut ChessMatch) {
@@ -311,69 +241,64 @@ impl MoveResolver {
                 continue;
             }
 
-            let (file, _) = rook.location.get_x_y();
+            let (file, rank) = rook.location.get_x_y();
             let color = piece.get_color();
+            let rank = rank + 1f64;
 
-            let direction = if file == 0f64 {
-                MoveDirection::West
-            } else {
-                MoveDirection::East
-            };
+            if file == 0f64 {
+                // queen side
+                let file_b = PieceLocation::new_from_string(format!("b{}", rank).as_str()).unwrap();
+                let file_c = PieceLocation::new_from_string(format!("c{}", rank).as_str()).unwrap();
+                let file_d = PieceLocation::new_from_string(format!("d{}", rank).as_str()).unwrap();
 
-            // first step
-            //let mut king_castle_data: Option<KingCastleData> = None;
-            let peek_result = piece.peek_direction(chess_match, &direction, Some(&piece.location));
-            if peek_result.state == LocationState::Empty {
-                // second step
-                let peek_result2 = piece.peek_direction(
+                let locations_can_be_attacked = MatchHelpers::locations_can_be_attacked(
+                    vec![file_b.clone(), file_c.clone(), file_d.clone()],
                     chess_match,
-                    &direction,
-                    Some(&peek_result.location.as_ref().unwrap()),
                 );
-                if peek_result2.state == LocationState::Empty {
-                    // third step, this is either the rook's location, or needs to be empty
-                    let peek_result3 = piece.peek_direction(
+
+                let file_b_state = rook.peek_location(&file_b, chess_match);
+                let file_c_state = rook.peek_location(&file_c, chess_match);
+                let file_d_state = rook.peek_location(&file_d, chess_match);
+
+                if file_b_state == LocationState::Empty
+                    && file_c_state == LocationState::Empty
+                    && file_d_state == LocationState::Empty
+                    && locations_can_be_attacked.len() == 0
+                {
+                    self.add_valid_castle(
+                        piece,
+                        file_c,
+                        file_d,
+                        rook.id,
+                        color,
+                        CastleSide::QueenSide,
                         chess_match,
-                        &direction,
-                        Some(&peek_result2.location.as_ref().unwrap()),
                     );
-                    let p3_loc = peek_result3.location.as_ref().unwrap();
-                    if *p3_loc == rook.location {
-                        // we found the rook, so add the previous two results as valid moves for the king
-                        let p_loc = peek_result.location.clone().unwrap();
-                        let p2_loc = peek_result2.location.clone().unwrap();
+                }
+            } else {
+                // king side
+                let file_f = PieceLocation::new_from_string(format!("f{}", rank).as_str()).unwrap();
+                let file_g = PieceLocation::new_from_string(format!("g{}", rank).as_str()).unwrap();
+                let locations_can_be_attacked = MatchHelpers::locations_can_be_attacked(
+                    vec![file_f.clone(), file_g.clone()],
+                    chess_match,
+                );
+                let file_f_state = rook.peek_location(&file_f, chess_match);
+                let file_g_state = rook.peek_location(&file_g, chess_match);
 
-                        // king can only castle if he does not pass through or land in check
-                        if !chess_match.locations_are_being_attacked(vec![&p_loc, &p2_loc], &color)
-                        {
-                            self.add_valid_castle(piece, p_loc, p2_loc, rook, color, chess_match);
-                        }
-                    } else if peek_result3.state == LocationState::Empty {
-                        // if we find another empty space, check once more for the rook
-                        let peek_result4 = piece.peek_direction(
-                            chess_match,
-                            &direction,
-                            Some(&peek_result3.location.as_ref().unwrap()),
-                        );
-
-                        if *peek_result4.location.as_ref().unwrap() == rook.location {
-                            let p_loc = peek_result.location.clone().unwrap();
-                            let p2_loc = peek_result2.location.clone().unwrap();
-                            // king can only castle if he does not pass through or land in check
-                            if !chess_match
-                                .locations_are_being_attacked(vec![&p_loc, &p2_loc], &color)
-                            {
-                                self.add_valid_castle(
-                                    piece,
-                                    p_loc,
-                                    p2_loc,
-                                    rook,
-                                    color,
-                                    chess_match,
-                                );
-                            }
-                        }
-                    }
+                if file_f_state == LocationState::Empty
+                    && file_g_state == LocationState::Empty
+                    && locations_can_be_attacked.len() == 0
+                {
+                    self.add_valid_castle(
+                        piece,
+                        file_g,
+                        file_f,
+                        rook.id,
+                        color,
+                        CastleSide::KingSide,
+                        chess_match,
+                    );
                 }
             }
         }
@@ -382,25 +307,21 @@ impl MoveResolver {
     fn add_valid_castle(
         &self,
         piece: &mut ChessPiece,
-        p_loc: PieceLocation,
-        p2_loc: PieceLocation,
-        rook: &ChessPiece,
+        king_loc: PieceLocation,
+        rook_loc: PieceLocation,
+        rook_id: Uuid,
         color: PieceColor,
+        side: CastleSide,
         chess_match: &mut ChessMatch,
     ) {
-        piece.add_valid_move(&p_loc);
-        piece.add_valid_move(&p2_loc);
-        let rook_location = rook.location.get_x_y();
+        piece.add_valid_move(&king_loc);
+        piece.add_valid_move(&rook_loc);
         let kcd = KingCastleData {
             king_id: piece.id.clone(),
-            king_target_location: p2_loc,
-            rook_id: rook.id.clone(),
-            rook_target_location: p_loc,
-            side: if rook_location.0 == 0f64 {
-                CastleSide::QueenSide
-            } else {
-                CastleSide::KingSide
-            },
+            king_target_location: king_loc,
+            rook_id,
+            rook_target_location: rook_loc,
+            side,
         };
         match color {
             PieceColor::White => chess_match.white_king_castle.push(kcd),

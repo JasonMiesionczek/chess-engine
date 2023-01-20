@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -149,6 +150,7 @@ impl MovementLogger {
         );
 
         let result = entry.notation(final_notation).clone();
+        info!("Log entry added: {:?}", result.clone());
         chess_match.add_log_entry(result.clone());
         result
     }

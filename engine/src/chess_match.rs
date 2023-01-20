@@ -27,6 +27,14 @@ pub struct KingCastleData {
     pub rook_target_location: PieceLocation,
     pub side: CastleSide,
 }
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Copy)]
+pub enum KingState {
+    InCheck,
+    InCheckMate,
+    InStaleMate,
+    NotInCheck,
+    NotInCheckMate,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChessMatch {
@@ -40,10 +48,8 @@ pub struct ChessMatch {
     completed: Option<DateTime<Utc>>,
     current_turn: Cell<u32>,
     pub pieces: Vec<ChessPiece>,
-    white_king_in_check: bool,
-    black_king_in_check: bool,
-    white_in_check_mate: bool,
-    black_in_check_mate: bool,
+    white_king_state: KingState,
+    black_king_state: KingState,
     pub white_king_castle: Vec<KingCastleData>,
     pub black_king_castle: Vec<KingCastleData>,
     movement_log: Vec<MovementLogEntry>,
@@ -64,10 +70,8 @@ impl ChessMatch {
             completed: None,
             current_turn: Cell::new(0),
             pieces,
-            white_king_in_check: false,
-            black_king_in_check: false,
-            white_in_check_mate: false,
-            black_in_check_mate: false,
+            white_king_state: KingState::NotInCheck,
+            black_king_state: KingState::NotInCheck,
             white_king_castle: Vec::new(),
             black_king_castle: Vec::new(),
             movement_log: Vec::new(),
@@ -86,10 +90,8 @@ impl ChessMatch {
             completed: self.completed,
             current_turn: self.current_turn.clone(),
             pieces: self.pieces.clone(),
-            white_king_in_check: self.white_king_in_check,
-            black_king_in_check: self.black_king_in_check,
-            white_in_check_mate: self.white_in_check_mate,
-            black_in_check_mate: self.black_in_check_mate,
+            white_king_state: self.white_king_state.clone(),
+            black_king_state: self.black_king_state.clone(),
             white_king_castle: self.white_king_castle.clone(),
             black_king_castle: self.black_king_castle.clone(),
             movement_log: self.movement_log.clone(),
@@ -135,36 +137,20 @@ impl ChessMatch {
         self.black_king_castle.clone()
     }
 
-    pub fn set_white_king_in_check(&mut self, value: bool) {
-        self.white_king_in_check = value
+    pub fn get_white_king_state(&self) -> KingState {
+        self.white_king_state
     }
 
-    pub fn set_black_king_in_check(&mut self, value: bool) {
-        self.black_king_in_check = value
+    pub fn set_white_king_state(&mut self, state: KingState) {
+        self.white_king_state = state;
     }
 
-    pub fn get_black_king_in_check(&self) -> bool {
-        self.black_king_in_check
+    pub fn get_black_king_state(&self) -> KingState {
+        self.black_king_state
     }
 
-    pub fn get_white_king_in_check(&self) -> bool {
-        self.white_king_in_check
-    }
-
-    pub fn set_white_king_checkmate(&mut self, value: bool) {
-        self.white_in_check_mate = value;
-    }
-
-    pub fn set_black_king_checkmate(&mut self, value: bool) {
-        self.black_in_check_mate = value;
-    }
-
-    pub fn get_white_king_checkmate(&self) -> bool {
-        self.white_in_check_mate
-    }
-
-    pub fn get_black_king_checkmate(&self) -> bool {
-        self.black_in_check_mate
+    pub fn set_black_king_state(&mut self, state: KingState) {
+        self.black_king_state = state;
     }
 
     pub fn has_king_castle_data(&mut self, color: PieceColor) -> bool {
@@ -182,6 +168,13 @@ impl ChessMatch {
         self.pieces
             .clone()
             .into_iter()
+            .filter(|p| !p.is_captured())
+            .collect()
+    }
+
+    pub fn get_pieces_in_play_mut(&mut self) -> Vec<&mut ChessPiece> {
+        self.pieces
+            .iter_mut()
             .filter(|p| !p.is_captured())
             .collect()
     }
@@ -271,9 +264,42 @@ impl ChessMatch {
         let resolver = MoveResolver {};
 
         resolver.calculate_valid_moves(self);
-        resolver.handle_king_cant_move_into_check(self);
-        resolver.calculate_king_in_check(self);
-        resolver.handle_king_in_check(self);
+        let kings = self.get_kings();
+        for king in kings {
+            let color = king.get_color();
+            let check_state = resolver.is_king_in_check_or_stale_mate(&king, self);
+            match check_state.king_state {
+                KingState::InCheck => {
+                    match color {
+                        PieceColor::White => {
+                            self.set_white_king_state(check_state.king_state.clone())
+                        }
+                        PieceColor::Black => {
+                            self.set_black_king_state(check_state.king_state.clone())
+                        }
+                    }
+
+                    resolver.override_valid_moves(
+                        self,
+                        check_state.new_valid_moves,
+                        check_state.new_valid_captures,
+                    );
+                }
+                _ => match color {
+                    PieceColor::White => self.set_white_king_state(check_state.king_state.clone()),
+                    PieceColor::Black => self.set_black_king_state(check_state.king_state.clone()),
+                },
+            }
+        }
+    }
+
+    pub fn get_kings(&self) -> Vec<ChessPiece> {
+        let kings = self
+            .get_pieces_in_play()
+            .into_iter()
+            .filter(|p| p.get_type() == PieceType::King)
+            .collect();
+        kings
     }
 
     pub fn get_piece_by_id(&mut self, piece_id: &Uuid) -> &mut ChessPiece {
@@ -282,7 +308,11 @@ impl ChessMatch {
     }
 
     pub fn get_piece_by_id_copy(&self, piece_id: &Uuid) -> ChessPiece {
-        let piece = self.pieces.iter().find(|p| p.id == *piece_id).unwrap();
+        let piece = self
+            .pieces
+            .iter()
+            .find(|p| p.id == *piece_id)
+            .expect(format!("Could not find piece with id: {}", piece_id).as_str());
         piece.to_owned()
     }
 
@@ -372,8 +402,10 @@ impl ChessMatch {
         self.change_turn();
         self.calculate_valid_moves();
 
-        if (piece.get_color() == PieceColor::Black && self.get_white_king_in_check())
-            || (piece.get_color() == PieceColor::White && self.get_black_king_in_check())
+        if (piece.get_color() == PieceColor::Black
+            && self.get_white_king_state() == KingState::InCheck)
+            || (piece.get_color() == PieceColor::White
+                && self.get_black_king_state() == KingState::InCheck)
         {
             movement_entry.opponent_king_in_check();
         }

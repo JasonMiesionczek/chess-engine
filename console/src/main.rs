@@ -1,5 +1,5 @@
 use chess_engine::{
-    chess_match::ChessMatch,
+    chess_match::{ChessMatch, KingState},
     movement_log::MovementLogger,
     piece_base::{MoveDirection, PieceColor, PieceType},
     piece_location::PieceLocation,
@@ -82,9 +82,9 @@ impl App {
     }
 
     fn handle_game_over(&mut self) {
-        if self.chess_match.get_white_king_checkmate() {
+        if self.chess_match.get_white_king_state() == KingState::InCheckMate {
             self.game_over_text = Some("Game Over! Black Wins!".to_string());
-        } else if self.chess_match.get_black_king_checkmate() {
+        } else if self.chess_match.get_black_king_state() == KingState::InCheckMate {
             self.game_over_text = Some("Game Over! White Wins!".to_string());
         }
     }
@@ -126,8 +126,8 @@ impl App {
                     let (new_loc_x, new_loc_y) = self.current_tile;
                     let new_location = PieceLocation::new_from_x_y(new_loc_x, new_loc_y + 1);
                     self.chess_match.move_piece(&piece.id, &new_location);
-                    if self.chess_match.get_white_king_checkmate()
-                        || self.chess_match.get_black_king_checkmate()
+                    if self.chess_match.get_white_king_state() == KingState::InCheckMate
+                        || self.chess_match.get_black_king_state() == KingState::InCheckMate
                     {
                         self.handle_game_over();
                     }
@@ -303,13 +303,17 @@ fn draw_pieces(ctx: &mut Context, chess_match: &ChessMatch) {
         }
         let mut color = Color::White;
         if piece.color == PieceColor::Black {
-            if piece.get_type() == PieceType::King && chess_match.get_black_king_in_check() {
+            if piece.get_type() == PieceType::King
+                && chess_match.get_black_king_state() == KingState::InCheck
+            {
                 color = check_color;
             } else {
                 color = Color::DarkGray;
             }
         } else {
-            if piece.get_type() == PieceType::King && chess_match.get_white_king_in_check() {
+            if piece.get_type() == PieceType::King
+                && chess_match.get_white_king_state() == KingState::InCheck
+            {
                 color = check_color;
             }
         }
