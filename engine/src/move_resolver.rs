@@ -14,11 +14,15 @@ pub enum SimulateType {
     Move,
     Capture,
 }
+
+#[derive(Debug, Clone)]
 pub struct PieceValidMove {
     piece_id: Uuid,
     location: PieceLocation,
+    color: PieceColor,
 }
 
+#[derive(Debug)]
 pub struct CheckMateResult {
     pub king_state: KingState,
     pub new_valid_moves: Vec<PieceValidMove>,
@@ -102,6 +106,7 @@ impl MoveResolver {
     ) -> CheckMateResult {
         let mut new_valid_moves: Vec<PieceValidMove> = Vec::new();
         let mut new_valid_captures: Vec<PieceValidMove> = Vec::new();
+        let color = king.get_color();
         let king_state = self.is_king_in_check(king, chess_match);
 
         // iterate through all pieceses moves and captures, checking if each one results in the
@@ -118,6 +123,7 @@ impl MoveResolver {
                     new_valid_moves.push(PieceValidMove {
                         piece_id: p.id.clone(),
                         location: m.clone(),
+                        color: sim_king.get_color(),
                     });
                 }
             });
@@ -142,20 +148,32 @@ impl MoveResolver {
                     new_valid_captures.push(PieceValidMove {
                         piece_id: p.id.clone(),
                         location: c.clone(),
+                        color: sim_king.get_color(),
                     });
                 }
             })
         }
 
-        let new_king_state = if new_valid_moves.len() == 0 && new_valid_captures.len() == 0 {
-            if king_state == KingState::InCheck {
-                KingState::InCheckMate
+        let player_new_valid_moves: Vec<PieceValidMove> = new_valid_moves
+            .clone()
+            .into_iter()
+            .filter(|m| m.color != color)
+            .collect();
+        let player_new_valid_captures: Vec<PieceValidMove> = new_valid_captures
+            .clone()
+            .into_iter()
+            .filter(|c| c.color != color)
+            .collect();
+        let new_king_state =
+            if player_new_valid_moves.len() == 0 && player_new_valid_captures.len() == 0 {
+                if king_state == KingState::InCheck {
+                    KingState::InCheckMate
+                } else {
+                    KingState::InStaleMate
+                }
             } else {
-                KingState::InStaleMate
-            }
-        } else {
-            king_state
-        };
+                king_state
+            };
 
         CheckMateResult {
             king_state: new_king_state,

@@ -268,6 +268,7 @@ impl ChessMatch {
         for king in kings {
             let color = king.get_color();
             let check_state = resolver.is_king_in_check_or_stale_mate(&king, self);
+            info!("king state: {:?}", check_state);
             match check_state.king_state {
                 KingState::InCheck => {
                     match color {

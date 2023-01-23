@@ -302,13 +302,23 @@ impl ChessPiece {
     }
 
     pub fn get_text(&self) -> String {
-        match self.piece_type {
-            PieceType::Pawn => "P".to_string(),
-            PieceType::Rook => "R".to_string(),
-            PieceType::Knight => "N".to_string(),
-            PieceType::Bishop => "B".to_string(),
-            PieceType::Queen => "Q".to_string(),
-            PieceType::King => "K".to_string(),
+        match self.color {
+            PieceColor::White => match self.piece_type {
+                PieceType::Pawn => "♙".to_string(),
+                PieceType::Rook => "♖".to_string(),
+                PieceType::Knight => "♘".to_string(),
+                PieceType::Bishop => "♗".to_string(),
+                PieceType::Queen => "♕".to_string(),
+                PieceType::King => "♔".to_string(),
+            },
+            PieceColor::Black => match self.piece_type {
+                PieceType::Pawn => "♟︎".to_string(),
+                PieceType::Rook => "♜".to_string(),
+                PieceType::Knight => "♞".to_string(),
+                PieceType::Bishop => "♝".to_string(),
+                PieceType::Queen => "♛".to_string(),
+                PieceType::King => "♚".to_string(),
+            },
         }
     }
 
